@@ -1,6 +1,8 @@
-from datetime import datetime
-from . import db
 import random
+from datetime import datetime
+
+from . import db
+
 
 class Topic(db.Model):
     __tablename__ = 'topics'

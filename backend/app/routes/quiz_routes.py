@@ -1,8 +1,11 @@
-from flask import jsonify, request
-from app.models.models import Topic, Question
-from app.models import db
-from . import quiz_bp
 import random
+
+from flask import jsonify, request
+
+from app.models import db
+from app.models.models import Question, Topic
+
+from . import quiz_bp
 
 MAX_QUIZ_QUESTIONS = 15
 
@@ -94,7 +97,7 @@ def manage_questions():
             
         except Exception as e:
             db.session.rollback()
-            print(f"Error adding question: {str(e)}")
+            print(f"Error adding question: {e!s}")
             return jsonify({'error': str(e)}), 400
             
     questions = Question.query.all()
@@ -172,7 +175,7 @@ def bulk_upload_questions():
             
         except Exception as e:
             failed_count += 1
-            errors.append(f"Row {index + 1}: {str(e)}")
+            errors.append(f"Row {index + 1}: {e!s}")
             continue
     
     # Second pass: Add valid questions to database

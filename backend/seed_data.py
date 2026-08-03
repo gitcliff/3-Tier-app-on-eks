@@ -1,6 +1,7 @@
 from app import create_app
 from app.models import db
-from app.models.models import Topic, Question
+from app.models.models import Question, Topic
+
 
 def seed_data():
     # Create topics
@@ -114,7 +115,7 @@ def seed_data():
         
     except Exception as e:
         db.session.rollback()
-        print(f"Error seeding data: {str(e)}")
+        print(f"Error seeding data: {e!s}")
         raise
 
 if __name__ == '__main__':

@@ -1,11 +1,13 @@
+import os
+
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
+
 from .config import Config
 from .models import db
-from .models.models import Topic, Question
-from .routes import topic_bp, quiz_bp, api_bp 
-import os
+from .models.models import Question, Topic
+from .routes import api_bp, quiz_bp, topic_bp
 
 migrate = Migrate()
 

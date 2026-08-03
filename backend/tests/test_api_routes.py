@@ -2,7 +2,7 @@ import pytest
 
 from app import create_app
 from app.models import db
-from app.models.models import Topic, Question
+from app.models.models import Question, Topic
 
 
 class TestConfig:
