@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
@@ -19,15 +20,19 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
+        working-directory: backend
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install ruff
 
       - name: Lint with Ruff
+        working-directory: backend
         run: ruff check .
 
       - name: Run tests with pytest
+        working-directory: backend
         run: pytest -v
