@@ -6,17 +6,18 @@ from flask_migrate import Migrate
 
 from .config import Config
 from .models import db
-from .models.models import Question, Topic
+from .models.models import Question as Question
+from .models.models import Topic as Topic
 from .routes import api_bp, quiz_bp, topic_bp
 
 migrate = Migrate()
 
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    
-    # Initialize extensions
 
+    # Initialize extensions
 
     # Check if ALLOWED_ORIGINS environment variable exists
     if os.getenv('ALLOWED_ORIGINS'):
@@ -27,12 +28,12 @@ def create_app(config_class=Config):
     else:
         # Use default behavior (allow all origins)
         CORS(app)
-    
+
     db.init_app(app)
     migrate.init_app(app, db)
-    
+
     # Register blueprints
     app.register_blueprint(topic_bp)
     app.register_blueprint(quiz_bp)
-    app.register_blueprint(api_bp) 
+    app.register_blueprint(api_bp)
     return app
