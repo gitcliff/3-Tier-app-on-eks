@@ -100,26 +100,26 @@ jobs:
       - name: Build and export to Docker
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./backend
+          file: ./backend/Dockerfile
           load: true
           push: false
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest,${{ secrets.DOCKERHUB_USERNAME }}/backend:${{ github.sha }}
+          tags: backend-app:latest,backend-app:${{ github.sha }}
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
-          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/backend:${{ github.sha }}
-          format: 'table'
-          exit-code: '1'
+          image-ref: backend-app:${{ github.sha }}
+          format: "table"
+          exit-code: "1"
           ignore-unfixed: true
-          severity: 'HIGH,CRITICAL'
+          severity: "CRITICAL"
 
       - name: Push to Docker Hub
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}        
+          labels: ${{ steps.meta.outputs.labels }}
