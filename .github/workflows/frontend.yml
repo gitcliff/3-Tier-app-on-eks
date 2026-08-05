@@ -65,7 +65,7 @@ jobs:
     needs: security-checks
     defaults:
       run:
-        working-directory: './${{ env.FRONTEND_DIR }}' # Executes all npm steps inside the subfolder
+        working-directory: './${{ env.FRONTEND_DIR }}' 
     steps:
       - uses: actions/checkout@v4
 
