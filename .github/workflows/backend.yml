@@ -1,4 +1,4 @@
-name: CI
+name: Backend CI pipeline
 
 on:
   workflow_dispatch:
