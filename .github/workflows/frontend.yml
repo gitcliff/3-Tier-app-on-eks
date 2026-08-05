@@ -15,12 +15,19 @@ concurrency:
   group: frontend-ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  FRONTEND_DIR: 'frontend' 
+
 jobs:
+
+########################################
+# Security Checks
+########################################
   security-checks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4  # Fixed version from v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -29,14 +36,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node for SCA  # Added for caching/speed
+      - name: Setup Node for SCA
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: './${{ env.FRONTEND_DIR }}/package-lock.json'
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
+        with:
+          args: ./${{ env.FRONTEND_DIR }} 
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}    
 
@@ -46,17 +56,24 @@ jobs:
           config: auto
           generateSarif: "1"
 
+########################################
+# Quality Checks
+########################################
   quality:
     runs-on: ubuntu-latest
     needs: security-checks
+    defaults:
+      run:
+        working-directory: './${{ env.FRONTEND_DIR }}' # Executes all npm steps inside the subfolder
     steps:
-      - uses: actions/checkout@v4  # Fixed version from v6
+      - uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: './${{ env.FRONTEND_DIR }}/package-lock.json'
 
       - name: Install Dependencies
         run: npm ci
@@ -72,18 +89,18 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/lcov.info  # Fixed path from backend/coverage.xml
+          files: ./${{ env.FRONTEND_DIR }}/coverage/lcov.info 
           fail_ci_if_error: true
 
       - name: Build React Application
         run: npm run build
 
+########################################
+# Docker Build
+########################################
   docker:
     runs-on: ubuntu-latest
     needs: quality
-    env:
-      REGISTRY: docker.io
-      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -100,23 +117,18 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/frontend
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/devops-learning-platform
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=sha-
             type=ref,event=branch
 
-      # Build locally first without pushing
       - name: Build Image Locally
         uses: docker/build-push-action@v6
         with:
-          context: .
-          push: false
+          context: ./${{ env.FRONTEND_DIR }} 
           load: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/devops-learning-platform:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -128,11 +140,10 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
 
-      # Push only after Trivy passes
       - name: Push Image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./${{ env.FRONTEND_DIR }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
